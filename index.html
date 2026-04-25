@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Generador Informe Mensual</title>
+<style>
+:root{--bg:#f4f3ef;--card:#fff;--accent:#1F3864;--accent2:#2E75B6;--accent3:#D6E4F0;
+--text:#1a1a1a;--muted:#6b7280;--border:#ddd;--ok:#166534;--ok-bg:#dcfce7;
+--err:#991b1b;--err-bg:#fee2e2;--warn:#92400e;--warn-bg:#fef3c7;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Calibri,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:var(--accent);color:#fff;padding:1.75rem 3rem;display:flex;align-items:center;gap:1.25rem;}
+.logo{width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+header h1{font-size:1.4rem;font-weight:600;letter-spacing:.02em;}
+header p{font-size:.8rem;opacity:.65;margin-top:3px;font-family:monospace;}
+main{max-width:900px;margin:0 auto;padding:2.5rem 2rem;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.75rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.card-header{display:flex;align-items:center;gap:.85rem;margin-bottom:1.25rem;}
+.badge{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:600;flex-shrink:0;}
+.card-header h2{font-size:1rem;font-weight:600;color:var(--accent);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+.upload-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem;font-weight:600;}
+.drop{border:2px dashed var(--border);border-radius:8px;padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#fafafa;min-height:128px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.drop:hover,.drop.over{border-color:var(--accent2);background:var(--accent3);}
+.drop.loaded{border-color:var(--ok);background:var(--ok-bg);}
+.drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop .icon{font-size:1.8rem;margin-bottom:.35rem;}
+.drop p{color:var(--muted);font-size:.82rem;}
+.drop .ok{margin-top:.6rem;padding:.35rem .85rem;background:var(--ok-bg);color:var(--ok);border-radius:5px;font-size:.78rem;font-family:monospace;display:none;}
+.reports-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;}
+.report-btn{padding:.75rem 1rem;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;text-align:center;}
+.report-btn:hover{background:var(--accent2);}
+.report-btn:disabled{background:#9ca3af;cursor:not-allowed;}
+.report-btn.full-width{grid-column:1/-1;}
+.btn-all{width:100%;padding:.9rem;background:#166534;color:#fff;border:none;border-radius:7px;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.75rem;}
+.btn-all:hover{background:#14532d;}
+.btn-all:disabled{background:#9ca3af;cursor:not-allowed;}
+.log{margin-top:1.1rem;}
+.msg{padding:.6rem .9rem;border-radius:5px;font-size:.85rem;margin-bottom:.4rem;font-family:monospace;}
+.i{background:var(--accent3);color:var(--accent);}
+.s{background:var(--ok-bg);color:var(--ok);}
+.e{background:var(--err-bg);color:var(--err);}
+.w{background:var(--warn-bg);color:var(--warn);}
+.prog{height:5px;background:#e5e7eb;border-radius:3px;margin:1rem 0;display:none;}
+.bar{height:100%;background:var(--accent2);border-radius:3px;transition:width .3s;width:0%;}
+.info{background:var(--accent3);border-left:4px solid var(--accent2);padding:.9rem 1.1rem;border-radius:0 7px 7px 0;font-size:.82rem;color:var(--accent);line-height:1.65;}
+.info ul{margin:.4rem 0 0 1.1rem;}
+.info strong{font-weight:700;}
+.info code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;}
+.hojas{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-top:.75rem;}
+.hoja{background:var(--accent);color:#fff;border-radius:5px;padding:.4rem .5rem;text-align:center;font-size:.72rem;font-weight:600;}
+.report-desc{font-size:.73rem;opacity:.85;font-weight:400;}
+@media(max-width:720px){
+  header{padding:1.25rem 1rem;align-items:flex-start;}
+  main{padding:1rem;}
+  .grid2,.reports-grid{grid-template-columns:1fr;}
+  .hojas{grid-template-columns:1fr 1fr;}
+  .card{padding:1.1rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">📊</div>
+  <div>
+    <h1>Generador de Informes de Revisión Mensual</h1>
+    <p>Comparativo nómina · formato compatible con informe mensual · 5 tipos de informe</p>
+  </div>
+</header>
+<main>
+
+<div class="card">
+  <div class="card-header"><div class="badge">i</div><h2>Cómo usar</h2></div>
+  <div class="info">
+    <strong>Abre esta página directamente en tu navegador (doble clic en el HTML).</strong>
+    Sube los dos libros de remuneraciones y genera uno o todos los informes.<br><br>
+    Cada informe contiene 5 hojas, en el mismo orden y con las pestañas de datos nombradas por mes:
+    <div class="hojas">
+      <div class="hoja">Resumen por empresa</div>
+      <div class="hoja">Resumen completo</div>
+      <div class="hoja">Detalle individual</div>
+      <div class="hoja">Marzo 2026</div>
+      <div class="hoja">Abril 2026</div>
+    </div>
+    <br>
+    <strong>5 Informes disponibles:</strong>
+    <ul>
+      <li><strong>General</strong> — Todos los datos completos</li>
+      <li><strong>RRHH</strong> — Sin empresa Claudia Pakarati ni cargo Gerente General</li>
+      <li><strong>PAKARATI</strong> — Solo empresa Claudia Pakarati</li>
+      <li><strong>PLANTA</strong> — Solo sede Planta Crux</li>
+      <li><strong>JCUEVAS</strong> — Como RRHH, solo cargo Manipulador(a) de Alimentos Pae</li>
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><div class="badge">1</div><h2>Cargar archivos</h2></div>
+  <div class="grid2">
+    <div>
+      <div class="upload-label">Mes Anterior</div>
+      <div class="drop" id="d-ant">
+        <input type="file" accept=".xlsx,.xls" onchange="loadFile(this,'ant')">
+        <div class="icon">⇧</div>
+        <p>Arrastra o haz clic para cargar el mes anterior</p>
+        <div class="ok" id="ok-ant"></div>
+      </div>
+    </div>
+    <div>
+      <div class="upload-label">Mes Actual</div>
+      <div class="drop" id="d-act">
+        <input type="file" accept=".xlsx,.xls" onchange="loadFile(this,'act')">
+        <div class="icon">⇧</div>
+        <p>Arrastra o haz clic para cargar el mes actual</p>
+        <div class="ok" id="ok-act"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><div class="badge">2</div><h2>Generar informes</h2></div>
+
+  <button class="btn-all" id="btn-all" onclick="generateAll()" disabled>⬇ Generar Todos los Informes (5 archivos)</button>
+
+  <div class="reports-grid">
+    <button class="report-btn" id="btn-general"  onclick="generate('general')"  disabled>📋 Informe General<span class="report-desc">Todos los datos</span></button>
+    <button class="report-btn" id="btn-rrhh"     onclick="generate('rrhh')"     disabled>👥 Informe RRHH<span class="report-desc">Sin Pakarati · Sin Gte. General</span></button>
+    <button class="report-btn" id="btn-pakarati" onclick="generate('pakarati')" disabled>🏢 Informe PAKARATI<span class="report-desc">Solo empresa Claudia Pakarati</span></button>
+    <button class="report-btn" id="btn-planta"   onclick="generate('planta')"   disabled>🏭 Informe PLANTA<span class="report-desc">Solo sede Planta Crux</span></button>
+    <button class="report-btn full-width" id="btn-jcuevas" onclick="generate('jcuevas')" disabled>🔧 Informe JCUEVAS<span class="report-desc">Como RRHH · Solo Manipulador(a) de Alimentos Pae</span></button>
+  </div>
+
+  <div class="prog" id="prog"><div class="bar" id="bar"></div></div>
+  <div class="log" id="log"></div>
+</div>
+
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script>
+const state={ant:null,act:null};
+
+const HABER_COLS=['Sueldo Base','Bono Manipuladora Pae','Bono Manipuladora Pae I','Bono Asistencia Isla',
+'Bono Trabajo Seguro','Bono Manipulador Lider','Bono Nocturna','Bono Responsabilidad',
+'Bono Buen Desempeño y Responsabilidad','Diferencia Bono Manipuladora Pae','Bono Apoyo',
+'Bono Asistencia','Bono Compensatorio','Bono','Bono Compromiso','Bono Inicio P','Bono Inicio',
+'Gratificación','atraso haber negativo','Horas Extras Empresa 50%','Colacion','Movilizacion',
+'Cargas Familiares Simples','Asignacion Familiar Retroactiva','Compensacion Sobregiro',
+'Aporte Sindical Movilización','Asignacion natalidad sindical','Asignación Sala Cuna',
+'Otro No imponible','Asignación Sala Cuna NP','Diferencia Movilización','Asignación Cuota Mortuoria',
+'Diferencia Colación','Diferencia mes anterior Imponible'];
+
+const DESC_COLS=['Cotizacion AFP','Ahorro AFP','Cotizacion SALUD','Seguro de Cesantia',
+'APVI Ahorro voluntario mensual','Impuesto','Sobregiro mes anterior','Creditos personales CCAF'];
+
+const REPORT_CONFIGS = {
+  general:  { label:'Revision_General',  filter: r => true },
+  rrhh:     { label:'Revision_RRHH',     filter: r => {
+    const emp   = String(r['Nombre empresa']||r['Empresa']||'').toLowerCase();
+    const cargo = String(r['Cargo']||'').toLowerCase();
+    return !emp.includes('pakarati') && !cargo.includes('gerente general');
+  }},
+  pakarati: { label:'Revision_PAKARATI', filter: r =>
+    String(r['Nombre empresa']||r['Empresa']||'').toLowerCase().includes('pakarati')
+  },
+  planta:   { label:'Revision_PLANTA',   filter: r =>
+    String(r['Sede']||'').toLowerCase().includes('planta')
+  },
+  jcuevas:  { label:'Revision_JCUEVAS',  filter: r => {
+    const emp   = String(r['Nombre empresa']||r['Empresa']||'').toLowerCase();
+    const cargo = String(r['Cargo']||'').toLowerCase();
+    return !emp.includes('pakarati') && !cargo.includes('gerente general')
+        && cargo.includes('manipulador') && cargo.includes('alimentos') && cargo.includes('pae');
+  }}
+};
+
+// ── Colores exactos del archivo de referencia ──────────────────────────────────
+const C_AZUL_OSC = '1F3864';   // encabezados grupo
+const C_AZUL_MED = '2E75B6';   // sub-encabezados fechas
+const C_AZUL_CLR = 'D6E4F0';   // fila total
+const C_GRIS     = 'F2F2F2';   // filas pares data
+const C_BLANCO   = 'FFFFFF';   // filas impares data
+const C_GRIS_TXT = 'F6F8F9';   // columnas texto en detalle (filas pares)
+const C_ROJO     = 'C00000';   // diferencias negativas
+
+const FMT_NUM  = '#,##0';
+const FMT_DIF  = '#,##0;[Red](#,##0);-';
+const FMT_DATE = 'mmm-yy';
+
+// Helpers de estilo
+function sf(rgb){ return {patternType:'solid', fgColor:{rgb}}; }
+function fnt(bold,sz,rgb='000000'){ return {bold,sz,color:{rgb},name:'Calibri'}; }
+function aln(h,v='center',wrap=false){ return {horizontal:h,vertical:v,wrapText:wrap}; }
+
+// Estilos reutilizables
+const S_HDR_GRP  = (fill=C_AZUL_OSC)=>({font:fnt(true,11,'FFFFFF'), fill:sf(fill), alignment:aln('center','center')});
+const S_HDR_SUB  = ()=>({font:fnt(true,10,'FFFFFF'), fill:sf(C_AZUL_MED), alignment:aln('center','center')});
+const S_DATA_TXT = (even)=>({font:fnt(false,11), fill:sf(even?C_GRIS:C_BLANCO), alignment:aln('left','center')});
+const S_DATA_NUM = (even,h='center')=>({font:fnt(false,11), fill:sf(even?C_GRIS:C_BLANCO), alignment:aln(h,'center')});
+const S_TOT_TXT  = (h='left')=>({font:fnt(true,11), fill:sf(C_AZUL_CLR), alignment:aln(h,'center')});
+const S_TOT_NUM  = (h='center')=>({font:fnt(true,11), fill:sf(C_AZUL_CLR), alignment:aln(h,'center')});
+// Detalle: columnas texto (B-F) usan F6F8F9 en pares, blanco en impares
+const S_DET_TXT  = (even)=>({font:fnt(false,9), fill:sf(even?C_GRIS_TXT:C_BLANCO), alignment:aln('left','center')});
+const S_DET_NUM  = (even)=>({font:fnt(false,9), fill:sf(even?C_GRIS:C_BLANCO), alignment:aln('right')});
+const S_DET_DIF  = (even,neg)=>({font:fnt(neg,9,neg?C_ROJO:'000000'), fill:sf(even?C_GRIS:C_BLANCO), alignment:aln('right')});
+// Raw sheet
+const S_RAW_HDR  = ()=>({font:fnt(true,10,'FFFFFF'), fill:sf(C_AZUL_OSC), alignment:aln('center','center',true)});
+const S_RAW_DATA = (even)=>({font:fnt(false,9), fill:sf(even?C_GRIS:C_BLANCO)});
+
+function dateSerial(d){ return Math.round((d.getTime()-new Date(1899,11,30).getTime())/86400000); }
+
+function log(msg,t='i'){
+  const d=document.createElement('div');
+  d.className='msg '+t; d.textContent=msg;
+  document.getElementById('log').appendChild(d);
+}
+function prog(p){
+  document.getElementById('prog').style.display='';
+  document.getElementById('bar').style.width=p+'%';
+}
+function clearLog(){ document.getElementById('log').innerHTML=''; }
+function setReadyState(){
+  const ready=!!(state.ant&&state.act);
+  ['btn-all','btn-general','btn-rrhh','btn-pakarati','btn-planta','btn-jcuevas']
+    .forEach(id=>document.getElementById(id).disabled=!ready);
+  if(!ready)return;
+  clearLog();
+  const pA=periodLabel(getPeriod(state.ant.sh.rows));
+  const pC=periodLabel(getPeriod(state.act.sh.rows));
+  const tone=pA<pC?'s':'w';
+  log(`Listo para generar: ${state.ant.sh.rows.length} registros en ${pA} y ${state.act.sh.rows.length} registros en ${pC}.`,tone);
+  if(pA>=pC)log('Revisa el orden: el mes anterior debería ser menor que el mes actual.','w');
+}
+
+function readPayroll(wb){
+  const sh=wb.SheetNames.find(n=>/detalle/i.test(n))||wb.SheetNames[0];
+  const ws=wb.Sheets[sh];
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const ANCHORS=['nombre empresa','nombre','rut','sueldo base'];
+  let hRow=-1;
+  for(let i=0;i<Math.min(raw.length,20);i++){
+    const cells=raw[i].map(c=>String(c).toLowerCase().trim());
+    if(ANCHORS.filter(a=>cells.some(c=>c===a||c.includes(a))).length>=3){hRow=i;break;}
+  }
+  if(hRow===-1)return null;
+  const rawH=raw[hRow].map(c=>String(c).trim());
+  const seen={};const headers=[];
+  for(const h of rawH){
+    if(h===''||h in seen){seen[h]=(seen[h]||0)+1;headers.push(h===''?`__d${seen[h]}`:`${h}_${seen[h]}`);}
+    else{seen[h]=0;headers.push(h);}
+  }
+  const rows=[];
+  for(let i=hRow+1;i<raw.length;i++){
+    const arr=raw[i];
+    if(arr.every(c=>c===''||c===null||c===undefined))continue;
+    const obj={};
+    headers.forEach((h,idx)=>{if(!h.startsWith('__d'))obj[h]=arr[idx]??'';});
+    const rut=String(obj['Rut']||'').trim();
+    if(rut&&/\d{5,}-[\dkK]/.test(rut))rows.push(obj);
+  }
+  if(!rows.length)return null;
+  for(const r of rows){
+    if(!('Suma Haberes' in r))
+      r['Suma Haberes']=HABER_COLS.reduce((s,c)=>s+(parseFloat(r[c])||0),0);
+    if(!('Sueldo Líquido' in r)){
+      const desc=DESC_COLS.reduce((s,c)=>s+(parseFloat(r[c])||0),0);
+      r['Sueldo Líquido']=r['Suma Haberes']-desc;
+    }
+    if(!('FTE' in r)){
+      const dc=Object.keys(r).find(k=>k.toLowerCase().includes('días trabajados')||k.toLowerCase().includes('dias trabajados'));
+      r['FTE']=dc?Math.min((parseFloat(r[dc])||0)/30,1):0;
+    }
+  }
+  return{name:sh,rows};
+}
+
+function loadFile(input,which){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const sh=readPayroll(wb);
+      if(!sh){alert('No se encontró hoja con nómina válida en: '+file.name);return;}
+      state[which]={wb,sh,name:file.name};
+      const el=document.getElementById('ok-'+which);
+      el.textContent='✓ '+file.name+' ('+sh.rows.length+' trabajadores · '+sh.name+')';
+      el.style.display='';
+      document.getElementById('d-'+which).classList.add('loaded');
+      setReadyState();
+    }catch(err){alert('Error: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function getPeriod(rows,fallback){
+  const pc=Object.keys(rows[0]).find(k=>k.toLowerCase()==='proceso');
+  if(pc){const m=String(rows[0][pc]).match(/(\d{4})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,25);}
+  return fallback||new Date();
+}
+function tabName(d){
+  const M=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return `${M[d.getMonth()]} ${d.getFullYear()}`;
+}
+function getColLetter(rows,name){
+  if(!rows.length)return'';
+  const i=Object.keys(rows[0]).findIndex(k=>k.toLowerCase().trim()===name.toLowerCase().trim());
+  return i>=0?XLSX.utils.encode_col(i):'';
+}
+function getUniq(arr,key){
+  return [...new Set(arr.map(r=>String(r[key]||'').trim()).filter(Boolean))].sort();
+}
+function findKey(rows,name){
+  if(!rows.length)return name;
+  return Object.keys(rows[0]).find(c=>c.toLowerCase()===name.toLowerCase())||name;
+}
+
+function periodLabel(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function toNum(v){
+  if(v===null||v===undefined||v==='')return 0;
+  if(typeof v==='number')return Number.isFinite(v)?v:0;
+  const cleaned=String(v).replace(/\./g,'').replace(',', '.').replace(/[^\d.-]/g,'');
+  const n=Number(cleaned);
+  return Number.isFinite(n)?n:0;
+}
+
+function valByName(r,...names){
+  if(!r)return '';
+  for(const name of names){
+    const k=Object.keys(r).find(c=>c.toLowerCase().trim()===name.toLowerCase().trim());
+    if(k&&String(r[k]??'').trim()!==''&&String(r[k]).trim().toLowerCase()!=='nan')return r[k];
+  }
+  return '';
+}
+
+function numByName(r,...names){
+  return toNum(valByName(r,...names));
+}
+
+function fteValue(r){
+  const explicit=valByName(r,'FTE');
+  if(explicit!==''&&explicit!==null&&explicit!==undefined)return toNum(explicit);
+  return Math.min(numByName(r,'Días Trabajados','Dias Trabajados')/30,1);
+}
+
+function cell(v, z){
+  const isNum=typeof v==='number'&&Number.isFinite(v);
+  const c={v:isNum?v:String(v??''), t:isNum?'n':'str'};
+  if(z)c.z=z;
+  return c;
+}
+
+function writeRow(ws,row,values,zByCol={}){
+  values.forEach((v,c)=>{
+    ws[XLSX.utils.encode_cell({r:row,c})]=cell(v,zByCol[c]);
+  });
+}
+
+function setCols(ws,widths){
+  ws['!cols']=widths.map(w=>({wch:w}));
+}
+
+function numericFormatMap(cols,fmt){
+  return Object.fromEntries(cols.map(c=>[c,fmt]));
+}
+
+function keyText(r,key){
+  return String(r?.[key]??'').trim();
+}
+
+function aggregate(rows,key){
+  const map=new Map();
+  rows.forEach(r=>{
+    const k=String(r[key]??'').trim();
+    if(!k)return;
+    const item=map.get(k)||{dot:0,fte:0,liq:0,hab:0};
+    item.dot+=1;
+    item.fte+=fteValue(r);
+    item.liq+=numByName(r,'Sueldo Líquido','Sueldo Liquido','Alcance Líquido','Alcance Liquido');
+    item.hab+=numByName(r,'Suma Haberes','Total Haberes');
+    map.set(k,item);
+  });
+  for(const item of map.values()){
+    item.fte=Math.round(item.fte);
+    item.liq=Math.round(item.liq);
+    item.hab=Math.round(item.hab);
+  }
+  return map;
+}
+
+// Hoja datos raw, compatible con el layout simple del archivo de referencia.
+function makeRawSheet(rows){
+  const ws={};
+  if(!rows.length){ws['!ref']='A1:A1';return ws;}
+  const headers=Object.keys(rows[0]);
+  writeRow(ws,0,headers);
+  const textHeaders=new Set(['Empresa','Nombre empresa','Rut empresa','Proceso','Nombre','Rut','Sede','Cargo','Fecha Inicio','Fecha Término','Fecha Termino','AFP','Inst. Salud','Tipo Contrato','Centro Costo','Sindicato','Pauta Contable','Agrupación','Forma de pago','Sindicato 2','Código Crux','Codigo Crux','Distribución Contable Crux','Distribucion Contable Crux']);
+  rows.forEach((row,ri)=>{
+    headers.forEach((h,ci)=>{
+      const v=row[h];
+      const keepText=textHeaders.has(h);
+      const n=toNum(v);
+      const looksNumeric=v!==''&&v!==null&&v!==undefined&&String(v).trim()!==''&&Number.isFinite(n)&&!keepText;
+      ws[XLSX.utils.encode_cell({r:ri+1,c:ci})]=looksNumeric?cell(n):cell(v);
+    });
+  });
+  const lastCol=XLSX.utils.encode_col(headers.length-1);
+  ws['!ref']=`A1:${lastCol}${rows.length+1}`;
+  return ws;
+}
+
+function summaryRows(labels,aMap,cMap){
+  const rows=labels.map((label,idx)=>{
+    const a=aMap.get(label)||{dot:0,fte:0,liq:0,hab:0};
+    const c=cMap.get(label)||{dot:0,fte:0,liq:0,hab:0};
+    return [idx+1,label,a.dot,c.dot,c.dot-a.dot,a.fte,c.fte,c.fte-a.fte,a.liq,c.liq,c.liq-a.liq,a.hab,c.hab,c.hab-a.hab];
+  });
+  const total=['','TOTAL'];
+  for(let c=2;c<14;c++)total[c]=rows.reduce((s,r)=>s+(Number(r[c])||0),0);
+  rows.push(total);
+  return rows;
+}
+
+function makeSummarySheet(labels,tA,tC,aMap,cMap,groupHeaderWidth){
+  const ws={};
+  const pA=periodLabel(tA), pC=periodLabel(tC);
+  writeRow(ws,0,['','Grupo','Dotación','Dotación','Dotación','FTE','FTE','FTE','Sueldo Líquido','Sueldo Líquido','Sueldo Líquido','Total Haberes','Total Haberes','Total Haberes']);
+  writeRow(ws,1,['','',pA,pC,'Diferencia',pA,pC,'Diferencia',pA,pC,'Diferencia',pA,pC,'Diferencia']);
+  const z={...numericFormatMap([2,3,5,6,8,9,11,12],FMT_NUM),...numericFormatMap([4,7,10,13],FMT_DIF)};
+  summaryRows(labels,aMap,cMap).forEach((r,i)=>writeRow(ws,i+2,r,z));
+  setCols(ws,[4,groupHeaderWidth,9,9,10,9,9,10,14,14,13,14,14,13]);
+  ws['!ref']=`A1:N${labels.length+3}`;
+  return ws;
+}
+
+function makeResumenEmpresa(empresas,tA,tC,rowsA,rowsC,empKeyA,empKeyC){
+  return makeSummarySheet(empresas,tA,tC,aggregate(rowsA,empKeyA),aggregate(rowsC,empKeyC),32);
+}
+
+function makeResumenSede(sedes,tA,tC,rowsA,rowsC,sedeKeyA,sedeKeyC){
+  return makeSummarySheet(sedes,tA,tC,aggregate(rowsA,sedeKeyA),aggregate(rowsC,sedeKeyC),34);
+}
+
+// Detalle individual con la misma estructura A:R del archivo adjunto.
+function makeDetalle(ruts,idxA,idxC,tA,tC){
+  const ws={};
+  const pA=periodLabel(tA), pC=periodLabel(tC);
+  writeRow(ws,0,['N°','Empresa','Nombre','Rut','Sede','Cargo','Días Trab.','Días Trab.','Dif.','Sueldo Líquido','Sueldo Líquido','Dif.','Total Haberes','Total Haberes','Dif.','Sueldo Base','Sueldo Base','Dif.']);
+  writeRow(ws,1,['','','','','','',pA,pC,'Diferencia',pA,pC,'Diferencia',pA,pC,'Diferencia',pA,pC,'Diferencia']);
+  const z={...numericFormatMap([6,7,9,10,12,13,15,16],FMT_NUM),...numericFormatMap([8,11,14,17],FMT_DIF)};
+
+  ruts.forEach((rut,ri)=>{
+    const rA=idxA[rut], rC=idxC[rut], ref=rC||rA;
+    const diasA=Math.round(numByName(rA,'Días Trabajados','Dias Trabajados'));
+    const diasC=Math.round(numByName(rC,'Días Trabajados','Dias Trabajados'));
+    const liqA=Math.round(numByName(rA,'Sueldo Líquido','Sueldo Liquido','Alcance Líquido','Alcance Liquido'));
+    const liqC=Math.round(numByName(rC,'Sueldo Líquido','Sueldo Liquido','Alcance Líquido','Alcance Liquido'));
+    const habA=Math.round(numByName(rA,'Suma Haberes','Total Haberes'));
+    const habC=Math.round(numByName(rC,'Suma Haberes','Total Haberes'));
+    const sbA=Math.round(numByName(rA,'Sueldo Base'));
+    const sbC=Math.round(numByName(rC,'Sueldo Base'));
+    writeRow(ws,ri+2,[
+      ri+1,
+      valByName(ref,'Nombre empresa','Empresa'),
+      valByName(ref,'Nombre'),
+      rut,
+      valByName(ref,'Sede'),
+      valByName(ref,'Cargo'),
+      diasA,diasC,diasC-diasA,
+      liqA,liqC,liqC-liqA,
+      habA,habC,habC-habA,
+      sbA,sbC,sbC-sbA
+    ],z);
+  });
+  setCols(ws,[5,28,32,13,18,26,8,8,8,13,13,13,13,13,13,12,12,12]);
+  ws['!ref']=`A1:R${ruts.length+2}`;
+  return ws;
+}
+
+function decodeCell(addr){
+  const m=String(addr).match(/^([A-Z]+)(\d+)$/);
+  if(!m)return null;
+  let c=0;
+  for(const ch of m[1])c=c*26+ch.charCodeAt(0)-64;
+  return {r:Number(m[2]),c};
+}
+
+function decodeRef(ref){
+  const [a,b]=String(ref||'A1:A1').split(':').map(decodeCell);
+  return {s:a||{r:1,c:1},e:b||a||{r:1,c:1}};
+}
+
+function argb(rgb){ return 'FF'+rgb; }
+function excelFill(rgb){ return {type:'pattern',pattern:'solid',fgColor:{argb:argb(rgb)}}; }
+function excelFont({bold=false,size=10,color='000000'}={}){ return {name:'Calibri',size,bold,color:{argb:argb(color)}}; }
+function excelBorder(color='D9E2F3'){
+  const side={style:'thin',color:{argb:argb(color)}};
+  return {top:side,left:side,bottom:side,right:side};
+}
+function downloadBuffer(buffer,fname){
+  const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=fname;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function applySummaryStyle(ws,lastRow,lastCol){
+  ws.views=[{state:'frozen',xSplit:2,ySplit:2}];
+  ws.autoFilter={from:{row:2,column:1},to:{row:lastRow,column:lastCol}};
+  ['C1:E1','F1:H1','I1:K1','L1:N1'].forEach(range=>ws.mergeCells(range));
+  ws.getRow(1).height=22;
+  ws.getRow(2).height=20;
+  for(let c=1;c<=lastCol;c++){
+    const h1=ws.getCell(1,c), h2=ws.getCell(2,c);
+    h1.fill=excelFill(C_AZUL_OSC); h1.font=excelFont({bold:true,size:10,color:'FFFFFF'});
+    h1.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    h2.fill=c<=2?excelFill(C_AZUL_OSC):excelFill(C_AZUL_MED);
+    h2.font=excelFont({bold:true,size:10,color:'FFFFFF'});
+    h2.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+  }
+  for(let r=3;r<=lastRow;r++){
+    const isTotal=r===lastRow;
+    const fill=isTotal?C_AZUL_CLR:(r%2===1?C_BLANCO:C_GRIS);
+    for(let c=1;c<=lastCol;c++){
+      const cell=ws.getCell(r,c);
+      cell.fill=excelFill(fill);
+      cell.font=excelFont({bold:isTotal,size:10});
+      cell.border=excelBorder();
+      cell.alignment={horizontal:c===2?'left':(c===1?'center':'right'),vertical:'middle'};
+    }
+  }
+}
+
+function applyDetalleStyle(ws,lastRow,lastCol){
+  ws.views=[{state:'frozen',xSplit:6,ySplit:2}];
+  ws.autoFilter={from:{row:1,column:1},to:{row:lastRow,column:lastCol}};
+  ['G1:I1','J1:L1','M1:O1','P1:R1'].forEach(range=>ws.mergeCells(range));
+  ws.getRow(1).height=22;
+  ws.getRow(2).height=20;
+  for(let c=1;c<=lastCol;c++){
+    const h1=ws.getCell(1,c), h2=ws.getCell(2,c);
+    h1.fill=excelFill(C_AZUL_OSC); h1.font=excelFont({bold:true,size:10,color:'FFFFFF'});
+    h1.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    h2.fill=c<=6?excelFill(C_AZUL_OSC):excelFill(C_AZUL_MED);
+    h2.font=excelFont({bold:true,size:9,color:'FFFFFF'});
+    h2.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+  }
+  for(let r=3;r<=lastRow;r++){
+    const even=r%2===0;
+    for(let c=1;c<=lastCol;c++){
+      const cell=ws.getCell(r,c);
+      cell.fill=excelFill(c>=2&&c<=6?(even?C_GRIS_TXT:C_BLANCO):(even?C_GRIS:C_BLANCO));
+      cell.font=excelFont({size:9,color:([9,12,15,18].includes(c)&&Number(cell.value)<0)?C_ROJO:'000000',bold:[9,12,15,18].includes(c)&&Number(cell.value)<0});
+      cell.border=excelBorder();
+      cell.alignment={horizontal:c>=7?'right':(c===1?'center':'left'),vertical:'middle'};
+    }
+  }
+}
+
+function applyRawStyle(ws,lastRow,lastCol){
+  ws.views=[{state:'frozen',ySplit:1}];
+  ws.autoFilter={from:{row:1,column:1},to:{row:lastRow,column:lastCol}};
+  ws.getRow(1).height=30;
+  for(let c=1;c<=lastCol;c++){
+    const h=ws.getCell(1,c);
+    h.fill=excelFill(C_AZUL_OSC);
+    h.font=excelFont({bold:true,size:9,color:'FFFFFF'});
+    h.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    h.border=excelBorder();
+  }
+  for(let r=2;r<=lastRow;r++){
+    const fill=r%2===0?C_BLANCO:C_GRIS;
+    for(let c=1;c<=lastCol;c++){
+      const cell=ws.getCell(r,c);
+      cell.fill=excelFill(fill);
+      cell.font=excelFont({size:9});
+      cell.border=excelBorder('E5E7EB');
+      cell.alignment={horizontal:typeof cell.value==='number'?'right':'left',vertical:'middle'};
+    }
+  }
+}
+
+function styleExcelSheet(ws,name,lastRow,lastCol){
+  if(name==='Resumen por empresa'||name==='Resumen completo')applySummaryStyle(ws,lastRow,lastCol);
+  else if(name==='Detalle individual')applyDetalleStyle(ws,lastRow,lastCol);
+  else applyRawStyle(ws,lastRow,lastCol);
+}
+
+async function writeStyledWorkbookFile(srcWb,fname){
+  if(!window.ExcelJS){
+    log('No se cargó ExcelJS; se descargará sin colores avanzados. Revisa tu conexión e inténtalo otra vez si necesitas el formato completo.','w');
+    XLSX.writeFile(srcWb,fname);
+    return;
+  }
+  const book=new ExcelJS.Workbook();
+  book.creator='Generador Informe Mensual';
+  book.created=new Date();
+  book.modified=new Date();
+
+  for(const name of srcWb.SheetNames){
+    const src=srcWb.Sheets[name];
+    const ref=decodeRef(src['!ref']);
+    const ws=book.addWorksheet(name,{properties:{defaultRowHeight:16}});
+    ws.properties.tabColor={argb:argb(name.startsWith('Resumen')?C_AZUL_OSC:(name==='Detalle individual'?C_AZUL_MED:C_AZUL_CLR))};
+    const widths=(src['!cols']||[]).map(c=>c.wch||10);
+    ws.columns=Array.from({length:ref.e.c},(_,i)=>({width:widths[i]||10}));
+    for(let r=1;r<=ref.e.r;r++){
+      for(let c=1;c<=ref.e.c;c++){
+        const addr=XLSX.utils.encode_cell({r:r-1,c:c-1});
+        const sc=src[addr];
+        if(!sc)continue;
+        const cell=ws.getCell(r,c);
+        cell.value=sc.t==='n'?Number(sc.v||0):(sc.v??'');
+        if(sc.z)cell.numFmt=sc.z;
+      }
+    }
+    styleExcelSheet(ws,name,ref.e.r,ref.e.c);
+  }
+
+  const buffer=await book.xlsx.writeBuffer();
+  downloadBuffer(buffer,fname);
+}
+
+// ── Core generate ──────────────────────────────────────────────────────────────
+function _setBtnsDisabled(v){
+  ['btn-all','btn-general','btn-rrhh','btn-pakarati','btn-planta','btn-jcuevas']
+    .forEach(id=>document.getElementById(id).disabled=v);
+}
+
+async function _build(type){
+  const cfg=REPORT_CONFIGS[type];
+  const rowsAllA=state.ant.sh.rows, rowsAllC=state.act.sh.rows;
+  const tA=getPeriod(rowsAllA), tC=getPeriod(rowsAllC);
+  const rowsA=rowsAllA.filter(cfg.filter), rowsC=rowsAllC.filter(cfg.filter);
+  if(!rowsA.length && !rowsC.length){ log(`Sin datos para ${type.toUpperCase()}.`,'w'); return; }
+
+  const tabAnt=tabName(tA), tabAct=tabName(tC);
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, makeRawSheet(rowsA), tabAnt);
+  XLSX.utils.book_append_sheet(wb, makeRawSheet(rowsC), tabAct);
+
+  const empKeyA=findKey(rowsA,'Nombre empresa'), empKeyC=findKey(rowsC,'Nombre empresa');
+  const sedKeyA=findKey(rowsA,'Sede'), sedKeyC=findKey(rowsC,'Sede');
+  const empresas=[...new Set([...getUniq(rowsA,empKeyA),...getUniq(rowsC,empKeyC)])].filter(Boolean).sort();
+  const sedes   =[...new Set([...getUniq(rowsA,sedKeyA),...getUniq(rowsC,sedKeyC)])].filter(Boolean).sort();
+
+  XLSX.utils.book_append_sheet(wb, makeResumenEmpresa(empresas,tA,tC,rowsA,rowsC,empKeyA,empKeyC), 'Resumen por empresa');
+  XLSX.utils.book_append_sheet(wb, makeResumenSede(sedes,tA,tC,rowsA,rowsC,sedKeyA,sedKeyC), 'Resumen completo');
+
+  const rutKeyA=findKey(rowsA,'rut'), rutKeyC=findKey(rowsC,'rut');
+  const ruts=[...new Set([...rowsA.map(r=>String(r[rutKeyA]||'').trim()),
+                           ...rowsC.map(r=>String(r[rutKeyC]||'').trim())])
+             ].filter(r=>/\d{5,}-[\dkK]/.test(r)).sort();
+  const idxA=Object.fromEntries(rowsA.map(r=>[String(r[rutKeyA]||'').trim(),r]));
+  const idxC=Object.fromEntries(rowsC.map(r=>[String(r[rutKeyC]||'').trim(),r]));
+  XLSX.utils.book_append_sheet(wb, makeDetalle(ruts,idxA,idxC,tA,tC), 'Detalle individual');
+
+  const order=['Resumen por empresa','Resumen completo','Detalle individual',tabAnt,tabAct];
+  wb.SheetNames=order.filter(s=>wb.SheetNames.includes(s));
+
+  const periodo=periodLabel(tC).replace('-','_');
+  const fname=`${cfg.label}_${periodo}.xlsx`;
+  await writeStyledWorkbookFile(wb,fname);
+  log(`  ✓ ${fname} — ${ruts.length} trabajadores · ${empresas.length} empresas · ${sedes.length} sedes`,'s');
+}
+
+async function generate(type){
+  clearLog();
+  _setBtnsDisabled(true);
+  prog(5);
+  try{ await _build(type); }
+  catch(err){ log('Error: '+err.message,'e'); console.error(err); }
+  prog(100);
+  _setBtnsDisabled(false);
+}
+
+async function generateAll(){
+  clearLog();
+  _setBtnsDisabled(true);
+  const types=['general','rrhh','pakarati','planta','jcuevas'];
+  for(let i=0;i<types.length;i++){
+    log(`▶ Generando informe ${types[i].toUpperCase()}...`,'i');
+    await new Promise(r=>setTimeout(r,80));
+    try{ await _build(types[i]); }
+    catch(err){ log(`  Error en ${types[i]}: ${err.message}`,'e'); }
+    prog((i+1)/types.length*95);
+    await new Promise(r=>setTimeout(r,200));
+  }
+  prog(100);
+  log('✓ Todos los informes generados (5 archivos).','s');
+  _setBtnsDisabled(false);
+}
+
+document.querySelectorAll('.drop').forEach(drop=>{
+  ['dragenter','dragover'].forEach(evt=>drop.addEventListener(evt,e=>{
+    e.preventDefault();
+    drop.classList.add('over');
+  }));
+  ['dragleave','drop'].forEach(evt=>drop.addEventListener(evt,()=>drop.classList.remove('over')));
+});
+</script>
+</body>
+</html>
